@@ -131,7 +131,7 @@ label {
   height:120px;
   overflow-y:auto;
   overscroll-behavior:contain;
-  scroll-snap-type:y mandatory;
+  scroll-snap-type:none;
   background:#171a17;
   border-radius:10px;
   scrollbar-width:thin;
@@ -143,7 +143,6 @@ label {
   display:flex;
   justify-content:center;
   align-items:center;
-  scroll-snap-align:center;
   color:var(--muted);
   font-size:16px;
   cursor:pointer;
@@ -418,15 +417,15 @@ function saveEntry(key,type,setNo,value) {
   saveAll(data);
 }
 
+
 function centerPickerOption(picker, el) {
   const pickerRect = picker.getBoundingClientRect();
   const optionRect = el.getBoundingClientRect();
 
-  const target = picker.scrollTop +
-    (optionRect.top - pickerRect.top) -
-    (picker.clientHeight - optionRect.height) / 2;
+  const optionCenter = optionRect.top + optionRect.height / 2;
+  const pickerCenter = pickerRect.top + picker.clientHeight / 2;
 
-  picker.scrollTop = target;
+  picker.scrollTop += optionCenter - pickerCenter;
 }
 
 
@@ -461,21 +460,45 @@ function pickerScroll(picker) {
 
   picker.scrollTimer = setTimeout(() => {
     const options = [...picker.querySelectorAll(".picker-option")];
+
     const pickerRect = picker.getBoundingClientRect();
-    const center = pickerRect.top + picker.clientHeight / 2;
+    const pickerCenter = pickerRect.top + picker.clientHeight / 2;
 
     let closest = null;
-    let distance = Infinity;
+    let minDistance = Infinity;
 
     options.forEach(el => {
       const rect = el.getBoundingClientRect();
-      const middle = rect.top + rect.height / 2;
-      const difference = Math.abs(middle - center);
+      const optionCenter = rect.top + rect.height / 2;
+      const distance = Math.abs(optionCenter - pickerCenter);
 
-      if (difference < distance) {
-        distance = difference;
+      if (distance < minDistance) {
+        minDistance = distance;
         closest = el;
       }
+    });
+
+    if (!closest) return;
+
+    // Centre the nearest number
+    centerPickerOption(picker, closest);
+
+    options.forEach(el => el.classList.remove("selected"));
+    closest.classList.add("selected");
+
+    const value = closest.dataset.value;
+
+    saveEntry(
+      picker.dataset.key,
+      picker.dataset.type,
+      Number(picker.dataset.set),
+      value
+    );
+
+    picker.parentElement.querySelector(".manual-entry").value = value;
+
+  }, 300);
+}
     });
 
     if (closest) {
