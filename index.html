@@ -435,7 +435,11 @@ function selectPicker(el) {
   picker.parentElement.querySelector(".manual-entry").value=value;
 }
 
+
 function pickerScroll(picker) {
+  // Prevent saving the default value during initial positioning
+  if(picker.dataset.ready !== "1") return;
+
   clearTimeout(picker.scrollTimer);
 
   picker.scrollTimer=setTimeout(()=>{
@@ -447,6 +451,7 @@ function pickerScroll(picker) {
     options.forEach(el=>{
       const middle=el.offsetTop+el.offsetHeight/2;
       const difference=Math.abs(middle-center);
+
       if(difference<distance) {
         distance=difference;
         closest=el;
@@ -458,8 +463,13 @@ function pickerScroll(picker) {
       closest.classList.add("selected");
 
       const value=closest.dataset.value;
-      saveEntry(picker.dataset.key,picker.dataset.type,
-        Number(picker.dataset.set),value);
+
+      saveEntry(
+        picker.dataset.key,
+        picker.dataset.type,
+        Number(picker.dataset.set),
+        value
+      );
 
       picker.parentElement.querySelector(".manual-entry").value=value;
     }
