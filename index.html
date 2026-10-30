@@ -453,6 +453,7 @@ function selectPicker(el) {
 
 
 
+
 function pickerScroll(picker) {
   if (picker.dataset.ready !== "1") return;
 
@@ -480,7 +481,6 @@ function pickerScroll(picker) {
 
     if (!closest) return;
 
-    // Centre the nearest number
     centerPickerOption(picker, closest);
 
     options.forEach(el => el.classList.remove("selected"));
@@ -499,25 +499,7 @@ function pickerScroll(picker) {
 
   }, 300);
 }
-    });
 
-    if (closest) {
-      options.forEach(x => x.classList.remove("selected"));
-      closest.classList.add("selected");
-
-      const value = closest.dataset.value;
-
-      saveEntry(
-        picker.dataset.key,
-        picker.dataset.type,
-        Number(picker.dataset.set),
-        value
-      );
-
-      picker.parentElement.querySelector(".manual-entry").value = value;
-    }
-  }, 150);
-}
 
 function manualPicker(input, key, type, setNo) {
   const value = input.value;
