@@ -418,51 +418,71 @@ function saveEntry(key,type,setNo,value) {
   saveAll(data);
 }
 
-function selectPicker(el) {
-  const picker=el.closest(".scroll-picker");
-  const list=picker.querySelector(".picker-list");
-  const options=list.querySelectorAll(".picker-option");
+function centerPickerOption(picker, el) {
+  const pickerRect = picker.getBoundingClientRect();
+  const optionRect = el.getBoundingClientRect();
 
-  options.forEach(x=>x.classList.remove("selected"));
-  el.classList.add("selected");
+  const target = picker.scrollTop +
+    (optionRect.top - pickerRect.top) -
+    (picker.clientHeight - optionRect.height) / 2;
 
-  picker.scrollTop=el.offsetTop+el.offsetHeight/2-picker.clientHeight/2;
-
-  const value=el.dataset.value;
-  saveEntry(picker.dataset.key,picker.dataset.type,
-    Number(picker.dataset.set),value);
-
-  picker.parentElement.querySelector(".manual-entry").value=value;
+  picker.scrollTop = target;
 }
 
 
+function selectPicker(el) {
+  const picker = el.closest(".scroll-picker");
+  const options = [...picker.querySelectorAll(".picker-option")];
+
+  options.forEach(x => x.classList.remove("selected"));
+  el.classList.add("selected");
+
+  centerPickerOption(picker, el);
+
+  const value = el.dataset.value;
+
+  saveEntry(
+    picker.dataset.key,
+    picker.dataset.type,
+    Number(picker.dataset.set),
+    value
+  );
+
+  picker.parentElement.querySelector(".manual-entry").value = value;
+}
+
+
+
+
 function pickerScroll(picker) {
-  // Prevent saving the default value during initial positioning
-  if(picker.dataset.ready !== "1") return;
+  if (picker.dataset.ready !== "1") return;
 
   clearTimeout(picker.scrollTimer);
 
-  picker.scrollTimer=setTimeout(()=>{
-    const options=[...picker.querySelectorAll(".picker-option")];
-    const center=picker.scrollTop+picker.clientHeight/2;
-    let closest=null;
-    let distance=Infinity;
+  picker.scrollTimer = setTimeout(() => {
+    const options = [...picker.querySelectorAll(".picker-option")];
+    const pickerRect = picker.getBoundingClientRect();
+    const center = pickerRect.top + picker.clientHeight / 2;
 
-    options.forEach(el=>{
-      const middle=el.offsetTop+el.offsetHeight/2;
-      const difference=Math.abs(middle-center);
+    let closest = null;
+    let distance = Infinity;
 
-      if(difference<distance) {
-        distance=difference;
-        closest=el;
+    options.forEach(el => {
+      const rect = el.getBoundingClientRect();
+      const middle = rect.top + rect.height / 2;
+      const difference = Math.abs(middle - center);
+
+      if (difference < distance) {
+        distance = difference;
+        closest = el;
       }
     });
 
-    if(closest) {
-      options.forEach(x=>x.classList.remove("selected"));
+    if (closest) {
+      options.forEach(x => x.classList.remove("selected"));
       closest.classList.add("selected");
 
-      const value=closest.dataset.value;
+      const value = closest.dataset.value;
 
       saveEntry(
         picker.dataset.key,
@@ -471,27 +491,32 @@ function pickerScroll(picker) {
         value
       );
 
-      picker.parentElement.querySelector(".manual-entry").value=value;
+      picker.parentElement.querySelector(".manual-entry").value = value;
     }
-  },150);
+  }, 150);
 }
 
-function manualPicker(input,key,type,setNo) {
-  const value=input.value;
-  if(value==="") return;
+function manualPicker(input, key, type, setNo) {
+  const value = input.value;
+  if (value === "") return;
 
-  saveEntry(key,type,setNo,value);
+  saveEntry(key, type, setNo, value);
 
-  const picker=input.parentElement.querySelector(".scroll-picker");
-  const options=[...picker.querySelectorAll(".picker-option")];
-  const match=options.find(x=>Number(x.dataset.value)===Number(value));
+  const picker = input.parentElement.querySelector(".scroll-picker");
+  const options = [...picker.querySelectorAll(".picker-option")];
 
-  if(match) {
-    options.forEach(x=>x.classList.remove("selected"));
+  const match = options.find(
+    x => Number(x.dataset.value) === Number(value)
+  );
+
+  if (match) {
+    options.forEach(x => x.classList.remove("selected"));
     match.classList.add("selected");
-    picker.scrollTop=match.offsetTop+match.offsetHeight/2-picker.clientHeight/2;
+    centerPickerOption(picker, match);
   }
 }
+
+
 
 /* EXERCISES */
 function showExercises(group) {
@@ -549,11 +574,11 @@ function showExercises(group) {
     const match=[...picker.querySelectorAll(".picker-option")]
       .find(x=>Number(x.dataset.value)===target);
 
-    if(match) {
-      picker.dataset.ready="0";
-      picker.scrollTop=match.offsetTop+match.offsetHeight/2-picker.clientHeight/2;
-      setTimeout(()=>{picker.dataset.ready="1";},300);
-    }
+  if(match) {
+  picker.dataset.ready="0";
+  centerPickerOption(picker, match);
+  setTimeout(()=>{picker.dataset.ready="1";},300);
+}
   });
 }
 
